@@ -4,149 +4,6 @@ const expectEqual = std.testing.expectEqual;
 
 const board = @import("./board.zig");
 
-// const Cell = struct {
-//     row: i8 = 0,
-//     col: i8 = 0,
-
-//     // Moves the cell
-//     pub fn advance(self: *Cell) error{CannotAdvance}!void {
-//         self.col += 1;
-//         if (self.col == 8) {
-//             self.col = 0;
-//             self.row += 1;
-
-//             if (self.row == 8) {
-//                 return error.CannotAdvance;
-//             }
-//         }
-//     }
-// };
-
-// pub const Move = struct {
-//     from: Cell = .{},
-//     to: Cell = .{},
-
-//     pub fn toStr(self: Move) [5]u8 {
-//         return [5]u8{
-//             'a' + @intCast(u8, self.from.col),
-//             '1' + @intCast(u8, self.from.row),
-//             '-',
-//             'a' + @intCast(u8, self.to.col),
-//             '1' + @intCast(u8, self.to.row),
-//         };
-//     }
-
-//     pub fn fromStr(str: [5]u8) Move {
-//         return Move{
-//             .from = .{
-//                 .col = @intCast(i8, str[0] - 'a'),
-//                 .row = @intCast(i8, str[1] - '1'),
-//             },
-//             .to = .{
-//                 .col = @intCast(i8, str[3] - 'a'),
-//                 .row = @intCast(i8, str[4] - '1'),
-//             },
-//         };
-//     }
-// };
-
-// fn isMoveValid(m: Move, b: Board) bool {
-//     // Cannot make "stall" moves
-//     if (m.from.row == m.to.row and m.from.col == m.to.col) return false;
-//
-//     const pieceFrom = b.pieces[@intCast(usize, m.from.row)][@intCast(usize, m.from.col)];
-//     const pieceTo = b.pieces[@intCast(usize, m.to.row)][@intCast(usize, m.to.col)];
-//
-//     // Move your own pieces damnit!
-//     if (colorOf(pieceFrom) == .white and !b.white_to_move) return false;
-//     if (colorOf(pieceFrom) == .black and b.white_to_move) return false;
-//
-//     // If take a piece, it must be a different color
-//     if (pieceTo != .empty and colorOf(pieceFrom) == colorOf(pieceTo)) return false;
-//
-//     return switch (pieceFrom) {
-//         .empty => return false,
-//         .white_pawn => {
-//             switch (m.to.col - m.from.col) {
-//                 0 => { // Push forward
-//                     return switch (m.to.row - m.from.row) {
-//                         1 => pieceTo == .empty,
-//                         2 => pieceTo == .empty and m.from.row == 1, // Can push 2 squares if only on the initial rank
-//                         else => false,
-//                     };
-//                 },
-//                 1, -1 => { // Attack
-//                     return switch (m.to.row - m.from.row) {
-//                         -1, 1 => pieceTo != .empty,
-//                         else => false,
-//                     };
-//                 },
-//                 else => return false,
-//             }
-//         },
-//         .black_pawn => { // This is copy-paste from .white_pawn, but with the values inverted
-//             switch (m.to.col - m.from.col) {
-//                 0 => { // Push forward
-//                     return switch (m.to.row - m.from.row) {
-//                         -1 => pieceTo == .empty,
-//                         -2 => pieceTo == .empty and m.from.row == 6, // Can push 2 squares if only on the initial rank
-//                         else => false,
-//                     };
-//                 },
-//                 1, -1 => { // Attack
-//                     return switch (m.to.row - m.from.row) {
-//                         -1, 1 => pieceTo != .empty,
-//                         else => false,
-//                     };
-//                 },
-//                 else => return false,
-//             }
-//         },
-//         .white_rook, .black_rook => {
-//             const sameRow = m.from.row == m.to.row;
-//             const sameCol = m.from.col == m.to.col;
-//             if (sameRow) {
-//             } else if (sameCol) {
-//
-//             } else { // different row and col
-//                 return false;
-//             }
-//         },
-//         else => return false,
-//     };
-// }
-
-// const whitePawnMoveIterator = struct {
-//     cell: Cell,
-//     pub fn next() ?Move {
-//         return Move{.from=cell, .to={.cell}}
-//
-//     }
-// }
-
-// const MoveIterator = struct {
-//     board: Board,
-//     m: Move = .{ .from = .{ .row = 0, .col = 0 }, .to = .{ .row = 0, .col = -1 } },
-
-//     pub fn next(self: *MoveIterator) ?Move {
-//         while (true) {
-//             // std.debug.print("HERE", .{});
-//             self.m.to.advance() catch |e1| {
-//                 _ = e1 catch {};
-//                 self.m.to.row = 0;
-//                 self.m.to.col = 0;
-//                 self.m.from.advance() catch |e2| {
-//                     _ = e2 catch {};
-//                     return null;
-//                 };
-//             };
-//             if (isMoveValid(self.m, self.board)) {
-//                 return self.m;
-//             }
-//         }
-//     }
-// };
-
 const Pos = struct {
     row: i8,
     col: i8,
@@ -230,12 +87,12 @@ fn fillBlackPawnMoves(pos: Pos, brd: board.Board, moves: *[64]Move) usize {
     }
 
     // Attacks
-    if (take1.inBounds() and board.colorOf(get(brd, take1)) == .black) {
+    if (take1.inBounds() and board.colorOf(get(brd, take1)) == .white) {
         moves[i] = Move{ .pos = take1, .becomes = .black_pawn };
         i += 1;
     }
 
-    if (take2.inBounds() and board.colorOf(get(brd, take2)) == .black) {
+    if (take2.inBounds() and board.colorOf(get(brd, take2)) == .white) {
         moves[i] = Move{ .pos = take2, .becomes = .black_pawn };
         i += 1;
     }
@@ -318,6 +175,29 @@ fn fillQueenMoves(pos: Pos, brd: board.Board, moves: *[64]Move, me: board.Piece)
     return fillLineMoves(pos, brd, moves, me, dirs[0..]);
 }
 
+fn fillKnightMoves(pos: Pos, brd: board.Board, moves: *[64]Move, me: board.Piece) usize {
+    const myColor = board.colorOf(me);
+    var i: usize = 0;
+    const toCheck = [_]Pos{
+        .{ .row = pos.row - 1, .col = pos.col - 2 },
+        .{ .row = pos.row - 1, .col = pos.col + 2 },
+        .{ .row = pos.row + 1, .col = pos.col - 2 },
+        .{ .row = pos.row + 1, .col = pos.col + 2 },
+        .{ .row = pos.row - 2, .col = pos.col - 1 },
+        .{ .row = pos.row - 2, .col = pos.col + 1 },
+        .{ .row = pos.row + 2, .col = pos.col - 1 },
+        .{ .row = pos.row + 2, .col = pos.col + 1 },
+    };
+
+    for (toCheck) |p| {
+        if (!p.inBounds()) continue;
+        if (board.colorOf(get(brd, p)) == myColor) continue;
+        moves[i] = .{ .pos = p, .becomes = me };
+        i += 1;
+    }
+    return i;
+}
+
 // Extended Move -> it has from added to Move
 pub const MoveDescription = struct {
     from: Pos,
@@ -388,13 +268,13 @@ pub const MoveIterator = struct {
             self.unreturnedMoveCnt = switch (piece) {
                 .empty => unreachable,
                 .white_pawn => fillWhitePawnMoves(self.lastPos, self.board, &self.moveBuf),
-                .white_knight => 0,
+                .white_knight => fillKnightMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_bishop => fillBishopMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_rook => fillRookMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_queen => fillQueenMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_king => 0,
                 .black_pawn => fillBlackPawnMoves(self.lastPos, self.board, &self.moveBuf),
-                .black_knight => 0,
+                .black_knight => fillKnightMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_bishop => fillBishopMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_rook => fillRookMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_queen => fillQueenMoves(self.lastPos, self.board, &self.moveBuf, piece),
@@ -421,40 +301,3 @@ test "MoveDescription: .toStr and .fromStr" {
     const m2 = MoveDescription.fromStr("a1-h8(Q)".*);
     try expectEqual(m2, m);
 }
-
-// test "isMoveValid: correct opponent" {
-//     const bw = Board.fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-//     try expect(isMoveValid(Move.fromStr("h2-h3".*), bw)); // White can move
-//     try expect(!isMoveValid(Move.fromStr("h7-h6".*), bw)); // Black can't
-//
-//     const bb = Board.fromFEN("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1");
-//     try expect(!isMoveValid(Move.fromStr("h2-h3".*), bb)); // White can't move
-//     try expect(isMoveValid(Move.fromStr("h7-h6".*), bb)); // Black can
-// }
-
-// test "isMoveValid: pawns" {
-//     var b = Board.fromFEN("8/8/8/8/1p6/P7/7P/8 w KQkq - 0 1");
-//     b.print(); // - use this to understand better
-//
-//     // Push the starting pawn 1 - yes
-//     try expect(isMoveValid(Move.fromStr("h2-h3".*), b));
-//     // Push the starting pawn 2 - yes
-//     try expect(isMoveValid(Move.fromStr("h2-h4".*), b));
-//     // Push the starting pawn 3 - no
-//     try expect(!isMoveValid(Move.fromStr("h2-h5".*), b));
-//
-//     // Push rando pawn 1 - yes
-//     try expect(isMoveValid(Move.fromStr("a3-a4".*), b));
-//     // Push rando pawn 2 - no
-//     try expect(!isMoveValid(Move.fromStr("a3-a5".*), b));
-//     // Take rando pawn back - no
-//     try expect(!isMoveValid(Move.fromStr("a3-a2".*), b));
-//
-//     // Attack with the white - yes
-//     try expect(isMoveValid(Move.fromStr("a3-b4".*), b));
-//
-//     // Attack with the black - yes
-//     b.white_to_move = false;
-//     try expect(isMoveValid(Move.fromStr("b4-a3".*), b));
-//     try expect(!isMoveValid(Move.fromStr("b4-c3".*), b));
-// }

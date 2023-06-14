@@ -34,11 +34,11 @@ pub const TerminalRenderer = struct {
         try self.stdout.writeAll("m");
     }
 
-    pub fn clearScreen(self: @This()) !void {
+    fn clearScreen(self: @This()) !void {
         try self.stdout.writeAll("\x1b[2J\x1b[1;1H");
     }
 
-    fn renderBoard(self: @This(), brd: board.Board, possMoves: []moves.MoveDescription) !void {
+    pub fn renderBoard(self: @This(), brd: board.Board, possMoves: []moves.MoveDescription) !void {
         if (brd.to_move == .white) {
             try self.stdout.writeAll("White to move\n");
         } else {
@@ -47,7 +47,7 @@ pub const TerminalRenderer = struct {
 
         for (brd.pieces, 0..) |col, rowIdx| {
             for (col, 0..) |piece, colIdx| {
-                var cellBg: u8 = if (rowIdx % 2 == colIdx % 2) 245 else 243;
+                var cellBg: u8 = if (rowIdx % 2 == colIdx % 2) 243 else 245;
 
                 if (rowIdx == self.cursorRow and colIdx == self.cursorCol) {
                     cellBg = 130;
@@ -75,22 +75,29 @@ pub const TerminalRenderer = struct {
                 try self.setColor(cellFg, cellBg);
                 try self.stdout.writer().writeByte(board.pieceToChar(piece));
             }
-            try self.setColor(20, 0);
+            try self.setColor(51, 232);
             try self.stdout.writer().print(" {d}\n", .{rowIdx + 1});
             try self.setColor(0, 0);
         }
 
-        try self.setColor(20, 0);
+        try self.setColor(51, 232);
         try self.stdout.writer().print("ABCDEFGH\n", .{});
         try self.stdout.writeAll("\x1b[0m");
     }
 
-    pub fn render(self: *@This(), brd: board.Board, choices: []moves.MoveDescription) !moves.MoveDescription {
+    pub fn interactiveRender(self: *@This(), brd: board.Board, choices: []moves.MoveDescription) !moves.MoveDescription {
         var possMoves: [64]moves.MoveDescription = undefined;
         var possMovesCnt: usize = 0;
 
+        var first: bool = true;
+
         while (true) {
-            try self.clearScreen();
+            if (!first) {
+                try self.stdout.writeAll("\x1b[10F");
+            }
+            first = false;
+
+            // try self.clearScreen();
             try self.renderBoard(brd, possMoves[0..possMovesCnt]);
 
             var buf: [20]u8 = undefined;
@@ -103,10 +110,12 @@ pub const TerminalRenderer = struct {
 
             if (c > 1) continue;
 
-            if (buf[0] == 'h' and self.cursorCol > 0) self.cursorCol -= 1;
-            if (buf[0] == 'j' and self.cursorRow < 7) self.cursorRow += 1;
-            if (buf[0] == 'k' and self.cursorRow > 0) self.cursorRow -= 1;
-            if (buf[0] == 'l' and self.cursorCol < 7) self.cursorCol += 1;
+            if (buf[0] == 'h') self.cursorCol -= 1;
+            if (buf[0] == 'j') self.cursorRow += 1;
+            if (buf[0] == 'k') self.cursorRow -= 1;
+            if (buf[0] == 'l') self.cursorCol += 1;
+            self.cursorRow = @mod(self.cursorRow, 8);
+            self.cursorCol = @mod(self.cursorCol, 8);
 
             if (buf[0] == 10) { // Enter
                 if (possMovesCnt == 0) {
@@ -123,8 +132,6 @@ pub const TerminalRenderer = struct {
                     possMovesCnt = 0;
                 }
             }
-
-            std.debug.print("c={} buf[0]={}\n", .{ c, buf[0] });
         }
     }
 };

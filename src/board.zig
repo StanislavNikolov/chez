@@ -20,23 +20,6 @@ pub const Piece = enum {
     black_king,
 };
 
-// pub fn constructPiece(c: Color, pt: PieceType) Piece {
-//     if (c == .empty) return .empty;
-//     if (c == .white and pt == .pawn) return .white_pawn;
-//     if (c == .white and pt == .knight) return .white_knight;
-//     if (c == .white and pt == .bishop) return .white_bishop;
-//     if (c == .white and pt == .rook) return .white_rook;
-//     if (c == .white and pt == .queen) return .white_queen;
-//     if (c == .white and pt == .king) return .white_king;
-//     if (c == .black and pt == .pawn) return .black_pawn;
-//     if (c == .black and pt == .knight) return .black_knight;
-//     if (c == .black and pt == .bishop) return .black_bishop;
-//     if (c == .black and pt == .rook) return .black_rook;
-//     if (c == .black and pt == .queen) return .black_queen;
-//     if (c == .black and pt == .king) return .black_king;
-//     unreachable;
-// }
-
 pub fn pieceToChar(p: Piece) u8 {
     return switch (p) {
         .empty => '.',
