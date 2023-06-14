@@ -35,8 +35,8 @@ fn fillWhitePawnMoves(pos: Pos, brd: board.Board, moves: *[64]Move) usize {
         i += 1;
     }
 
-    // Jump push forward, if the pawn is not yet pushed
-    if (pos.row == 1 and push2.inBounds() and get(brd, push2) == .empty) {
+    // Jump push forward, if the pawn is not yet pushed and push1 is possible
+    if (pos.row == 1 and i == 1 and push2.inBounds() and get(brd, push2) == .empty) {
         moves[i] = Move{ .pos = push2, .becomes = .white_pawn };
         i += 1;
     }
@@ -80,8 +80,8 @@ fn fillBlackPawnMoves(pos: Pos, brd: board.Board, moves: *[64]Move) usize {
         i += 1;
     }
 
-    // Jump push forward, if the pawn is not yet pushed
-    if (pos.row == 6 and push2.inBounds() and get(brd, push2) == .empty) {
+    // Jump push forward, if the pawn is not yet pushed and push 1 is possible
+    if (pos.row == 6 and i == 1 and push2.inBounds() and get(brd, push2) == .empty) {
         moves[i] = Move{ .pos = push2, .becomes = .black_pawn };
         i += 1;
     }
@@ -198,6 +198,26 @@ fn fillKnightMoves(pos: Pos, brd: board.Board, moves: *[64]Move, me: board.Piece
     return i;
 }
 
+fn fillKingMoves(pos: Pos, brd: board.Board, moves: *[64]Move, me: board.Piece) usize {
+    var i: usize = 0;
+
+    const myColor = board.colorOf(me);
+    const delta = [3]i8{ -1, 0, 1 };
+    for (delta) |dr| {
+        for (delta) |dc| {
+            if (dr == 0 and dc == 0) continue;
+            const np = Pos{ .row = pos.row - dr, .col = pos.col - dc };
+            if (!np.inBounds()) continue;
+            if (board.colorOf(get(brd, np)) != myColor) {
+                moves[i] = .{ .pos = np, .becomes = me };
+                i += 1;
+            }
+        }
+    }
+
+    return i;
+}
+
 // Extended Move -> it has from added to Move
 pub const MoveDescription = struct {
     from: Pos,
@@ -272,13 +292,13 @@ pub const MoveIterator = struct {
                 .white_bishop => fillBishopMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_rook => fillRookMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .white_queen => fillQueenMoves(self.lastPos, self.board, &self.moveBuf, piece),
-                .white_king => 0,
+                .white_king => fillKingMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_pawn => fillBlackPawnMoves(self.lastPos, self.board, &self.moveBuf),
                 .black_knight => fillKnightMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_bishop => fillBishopMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_rook => fillRookMoves(self.lastPos, self.board, &self.moveBuf, piece),
                 .black_queen => fillQueenMoves(self.lastPos, self.board, &self.moveBuf, piece),
-                .black_king => 0,
+                .black_king => fillKingMoves(self.lastPos, self.board, &self.moveBuf, piece),
             };
 
             // TODO maybe check for legality here? Some of the moves might make a discover check for example.

@@ -6,17 +6,19 @@ fn scoreBoard(brd: board.Board) i32 {
     for (brd.pieces) |col| {
         for (col) |piece| {
             score += switch (piece) {
-                .empty, .white_king, .black_king => 0,
+                .empty => 0,
                 .white_pawn => 1,
                 .white_knight => 3,
                 .white_bishop => 3,
                 .white_rook => 5,
                 .white_queen => 10,
+                .white_king => 9999,
                 .black_pawn => -1,
                 .black_knight => -3,
                 .black_bishop => -3,
                 .black_rook => -5,
                 .black_queen => -10,
+                .black_king => -9999,
             };
         }
     }
