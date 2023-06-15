@@ -4,7 +4,7 @@ const expectEqual = std.testing.expectEqual;
 
 const board = @import("./board.zig");
 
-const Pos = struct {
+pub const Pos = struct {
     row: i8,
     col: i8,
     pub fn inBounds(self: Pos) bool {
@@ -17,7 +17,7 @@ const Move = struct {
     becomes: board.Piece,
 };
 
-fn get(brd: board.Board, pos: Pos) board.Piece {
+pub fn get(brd: board.Board, pos: Pos) board.Piece {
     return brd.pieces[@intCast(usize, pos.row)][@intCast(usize, pos.col)];
 }
 
