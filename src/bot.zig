@@ -1,7 +1,6 @@
-const board = @import("board.zig");
-const moves = @import("moves.zig");
+const core = @import("core.zig");
 
-fn scoreBoard(brd: board.Board) i32 {
+fn scoreBoard(brd: core.Board) i32 {
     var score: i32 = 0;
     for (brd.pieces) |col| {
         for (col) |piece| {
@@ -26,18 +25,18 @@ fn scoreBoard(brd: board.Board) i32 {
 }
 
 const asd = struct {
-    move: moves.MoveDescription,
+    move: core.MoveDescription,
     score: i32,
 };
 
-pub fn play(brd: board.Board, depth_limit: i32) asd {
-    var it = moves.MoveIterator{ .board = brd };
+pub fn play(brd: core.Board, depth_limit: i32) asd {
+    var it = core.MoveIterator{ .board = brd };
     var best_score: i32 = 99999;
-    var best_move: moves.MoveDescription = undefined;
+    var best_move: core.MoveDescription = undefined;
 
     while (it.next()) |m| {
         var cp = brd;
-        moves.makeMove(&cp, m);
+        core.makeMove(&cp, m);
 
         var cp_score: i32 = undefined;
         if (depth_limit > 0) {

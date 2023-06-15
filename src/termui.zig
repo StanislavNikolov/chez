@@ -1,7 +1,5 @@
 const std = @import("std");
-const tty = std.io.tty;
-const board = @import("board.zig");
-const moves = @import("moves.zig");
+const core = @import("core.zig");
 
 pub const TerminalRenderer = struct {
     stdin: std.fs.File = std.io.getStdIn(),
@@ -38,7 +36,7 @@ pub const TerminalRenderer = struct {
         try self.stdout.writeAll("\x1b[2J\x1b[1;1H");
     }
 
-    pub fn renderBoard(self: @This(), brd: board.Board, possMoves: []moves.MoveDescription) !void {
+    pub fn renderBoard(self: @This(), brd: core.Board, possMoves: []core.MoveDescription) !void {
         if (brd.to_move == .white) {
             try self.stdout.writeAll("White to move\n");
         } else {
@@ -65,7 +63,7 @@ pub const TerminalRenderer = struct {
                 if (target) {
                     cellFg = 51;
                 } else {
-                    cellFg = switch (board.colorOf(piece)) {
+                    cellFg = switch (core.colorOf(piece)) {
                         .white => 231,
                         .black => 232,
                         .empty => cellBg,
@@ -73,7 +71,7 @@ pub const TerminalRenderer = struct {
                 }
 
                 try self.setColor(cellFg, cellBg);
-                try self.stdout.writer().writeByte(board.pieceToChar(piece));
+                try self.stdout.writer().writeByte(core.pieceToChar(piece));
             }
             try self.setColor(51, 232);
             try self.stdout.writer().print(" {d}\n", .{rowIdx + 1});
@@ -85,8 +83,8 @@ pub const TerminalRenderer = struct {
         try self.stdout.writeAll("\x1b[0m");
     }
 
-    pub fn interactiveRender(self: *@This(), brd: board.Board, choices: []moves.MoveDescription) !moves.MoveDescription {
-        var possMoves: [64]moves.MoveDescription = undefined;
+    pub fn interactiveRender(self: *@This(), brd: core.Board, choices: []core.MoveDescription) !core.MoveDescription {
+        var possMoves: [64]core.MoveDescription = undefined;
         var possMovesCnt: usize = 0;
 
         var first: bool = true;
