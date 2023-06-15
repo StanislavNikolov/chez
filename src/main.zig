@@ -55,8 +55,6 @@ pub fn main() !void {
     //     // core.makeMove(&b, selectedMove);
     // }
 
-    std.debug.print("test\n", .{});
-
     raylib.SetConfigFlags(raylib.ConfigFlags{ .FLAG_WINDOW_RESIZABLE = true, .FLAG_VSYNC_HINT = true });
     raylib.InitWindow(800, 800, "Chez");
     defer raylib.CloseWindow();
@@ -73,7 +71,8 @@ pub fn main() !void {
 
     var choices: [4096]core.MoveDescription = undefined;
     var choiceCnt: usize = core.getAllLegalMoves(brd, &choices);
-    std.debug.print("cl={}\n", .{choiceCnt});
+
+    var hightligtedCells: [8][8]bool = .{.{false} ** 8} ** 8;
 
     while (!raylib.WindowShouldClose()) {
         raylib.BeginDrawing();
@@ -98,6 +97,12 @@ pub fn main() !void {
             const piece = core.get(brd, pos);
             if (piece != .empty and core.colorOf(piece) == brd.to_move) {
                 picked = pos;
+                // Find all the cells that should be highligted.
+                hightligtedCells = .{.{false} ** 8} ** 8;
+                for (choices[0..choiceCnt]) |mvd| {
+                    if (mvd.from.row != picked.?.row or mvd.from.col != picked.?.col) continue;
+                    hightligtedCells[@intCast(usize, mvd.to.row)][@intCast(usize, mvd.to.col)] = true;
+                }
             }
         }
 
@@ -108,15 +113,22 @@ pub fn main() !void {
             };
 
             for (choices[0..choiceCnt]) |mvd| {
-                std.debug.print("{},{} - {},{}\n", .{ mvd.from.row, mvd.from.col, mvd.to.row, mvd.to.col });
                 if (mvd.from.row != picked.?.row or mvd.from.col != picked.?.col or mvd.to.row != pos.row or mvd.to.col != pos.col) continue;
                 core.makeMove(&brd, mvd);
+
+                if (brd.to_move == .black) {
+                    const botMove = bot.play(brd, 4).move;
+                    core.makeMove(&brd, botMove);
+                }
+
                 choiceCnt = core.getAllLegalMoves(brd, &choices);
                 break;
             }
+            hightligtedCells = .{.{false} ** 8} ** 8;
             picked = null;
         }
 
+        // Draw the board.
         for (brd.pieces, 0..) |col, rowIdx| {
             for (col, 0..) |piece, colIdx| {
                 const color = if (rowIdx % 2 == colIdx % 2) whiteBg else blackBg;
@@ -129,6 +141,10 @@ pub fn main() !void {
                 };
 
                 raylib.DrawRectangleRec(rec, color);
+
+                if (hightligtedCells[@intCast(usize, rowIdx)][@intCast(usize, colIdx)]) {
+                    raylib.DrawCircleV(rec.center(), @intToFloat(f32, size) / 4, raylib.RED);
+                }
 
                 if (piece == .empty) continue;
 

@@ -30,11 +30,13 @@ const asd = struct {
 };
 
 pub fn play(brd: core.Board, depth_limit: i32) asd {
-    var it = core.MoveIterator{ .board = brd };
     var best_score: i32 = 99999;
     var best_move: core.MoveDescription = undefined;
 
-    while (it.next()) |m| {
+    var choices: [4096]core.MoveDescription = undefined;
+    var choiceCnt: usize = core.getAllLegalMoves(brd, &choices);
+
+    for (choices[0..choiceCnt]) |m| {
         var cp = brd;
         core.makeMove(&cp, m);
 
